@@ -21,6 +21,9 @@ The customer requires employees to receive a unique
 incident reference immediately after successfully
 submitting a ticket.
 
+**Ticket Reference Generation**
+UUIDs have been selected for the initial proof of concept to avoid the additional database coordination required for sequential numbering. Human-readable sequential references may be considered in a future iteration.
+
 Successfully created incidents must be persistently
 stored and immediately retrievable by authorised users.
 
