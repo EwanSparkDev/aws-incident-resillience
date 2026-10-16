@@ -364,7 +364,7 @@ traffic patterns before any production recommendation.
 | ADR-001 | DynamoDB-first incident creation | Proposed |
 | ADR-002 | Cognito authentication and authorisation | Proposed |
 | ADR-003 | Asynchronous email notifications | Proposed |
-| ADR-004 | 
+| ADR-004 | Incident Retrieval and Database Access Patterns | Proposed
 
 
 
