@@ -217,6 +217,144 @@ requirements justify the extra complexity.
 
 Proposed — Pending implementation and testing.
 
+
+---
+
+
+
+---
+
+## ADR-004: Incident Retrieval and Database Access Patterns
+
+### Context
+
+The application must support secure retrieval of incidents
+by employees and IT administrators.
+
+Employees may only access incidents they have submitted.
+
+IT administrators require access to incidents created
+by all employees.
+
+### Decision
+
+Use Amazon DynamoDB with incidentId as the primary
+partition key.
+
+Configure a Global Secondary Index:
+
+- Index Name: RaisedByIndex
+- Partition Key: raisedBy
+- Sort Key: createdAt
+
+### Application Read Operations
+
+**GET /incidents**
+
+For employees:
+- Extract the user ID from validated Cognito claims.
+- Query RaisedByIndex using the authenticated user ID.
+- Return matching incidents.
+
+For IT administrators:
+- Verify membership of the ITAdmins group.
+- Retrieve incidents using a paginated Scan for the PoC.
+
+**GET /incidents/{id}**
+
+- Retrieve the incident using its incidentId.
+- Verify the requesting user's permissions.
+- Employees must match the incident's raisedBy attribute.
+- ITAdmins may access incidents owned by other employees.
+
+### Justification
+
+The GSI provides efficient access to incidents
+associated with an individual employee.
+
+Using the authenticated user's identity prevents
+users from manipulating request parameters to
+retrieve another employee's incidents.
+
+### Alternatives Considered
+
+**DynamoDB Scan for All Requests**
+
+Rejected for employee retrieval because scanning
+the entire table becomes inefficient as data grows.
+
+**Amazon RDS / PostgreSQL**
+
+Suitable for complex relational data and reporting,
+but introduces additional infrastructure and cost
+for this small proof of concept.
+
+### Trade-offs
+
+- Global Secondary Indexes introduce additional
+  storage and write costs.
+- GSI queries are eventually consistent.
+- Administrator Scan operations are not ideal
+  for large production datasets.
+- Pagination is required for larger result sets.
+
+
+### Scalability and Production Considerations
+
+The proposed database design is appropriate for the
+initial proof of concept, but has not yet been validated
+against production-scale workloads.
+
+The AdminIndex uses a shared partition key
+(adminGroup = ALL) to support chronological incident
+retrieval without scanning the entire table.
+
+This simplifies implementation but could create
+uneven access patterns at higher throughput.
+
+#### Identified Limitations
+
+- All incidents share the same AdminIndex partition
+  key value.
+- High write or read traffic could create contention.
+- Global Secondary Indexes introduce additional
+  storage and write costs.
+- GSI queries are eventually consistent.
+- More complex administrative filtering may require
+  additional indexes or a different data model.
+
+#### Potential Production Improvements
+
+1. Analyse actual incident volumes, read/write
+   patterns and expected growth.
+2. Monitor DynamoDB throttling, latency and
+   consumed capacity under representative workloads.
+3. Evaluate sharded index designs if partition-key
+   contention becomes a demonstrated limitation.
+4. Reconsider the database technology if flexible
+   relational queries and reporting become major
+   business requirements.
+
+#### Architectural Justification
+
+The project deliberately favours a simple data model
+appropriate for the currently defined requirements.
+
+Introducing time-based partitioning or write sharding
+without a demonstrated scalability requirement would
+increase application complexity and maintenance.
+
+The current design is accepted for the PoC, with
+production scalability requiring further validation.
+
+#### Production Readiness
+
+Status: Not validated for production.
+
+The architecture will be reviewed against realistic
+traffic patterns before any production recommendation.
+
+
 ---
 
 ## Decision Summary
@@ -226,9 +364,12 @@ Proposed — Pending implementation and testing.
 | ADR-001 | DynamoDB-first incident creation | Proposed |
 | ADR-002 | Cognito authentication and authorisation | Proposed |
 | ADR-003 | Asynchronous email notifications | Proposed |
+| ADR-004 | 
+
+
+
 
 ## Future Decisions
 
-- ADR-004: Incident Retrieval and DynamoDB Access Patterns
-- Notification failure recovery and monitoring
+- ADR-005: UI layout and data
 - Cost optimisation and scaling configuration
