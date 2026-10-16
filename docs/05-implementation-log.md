@@ -78,7 +78,7 @@ matching the employee's unique identifier.
 The AdminIndex successfully returned incident
 records using the shared adminGroup partition key.
 
-![Administrator Query Test](../screenshots/admin-query.png)
+![Admintrator Query](..screenshots/admmin-query.png)
 
 
 ### 1.5 Architectural Considerations
