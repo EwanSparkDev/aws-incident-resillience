@@ -63,6 +63,24 @@ the DynamoDB Console.
 | Employee Query | RaisedByIndex returns matching ticket | PASS |
 | Admin Query | AdminIndex returns ticket | PASS |
 
+
+### 1.6 Test Evidence
+
+#### Employee Query
+
+The RaisedByIndex successfully returned incidents
+matching the employee's unique identifier.
+
+![Employee Query Test](../screenshots/employee-query.png)
+
+#### Administrator Query
+
+The AdminIndex successfully returned incident
+records using the shared adminGroup partition key.
+
+![Administrator Query Test](../screenshots/admin-query.png)
+
+
 ### 1.5 Architectural Considerations
 
 - DynamoDB was selected for its managed serverless
