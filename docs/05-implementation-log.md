@@ -104,4 +104,36 @@ records using the shared adminGroup partition key.
 
 ## 2. AWS Lambda
 
-**Status:** Not Yet Deployed
+
+## 2. AWS Lambda — CreateIncident
+
+**Runtime:** Python 3.14
+**Region:** ap-southeast-2
+**Status:** Deployed — Initial Tests Passed
+
+### Implementation
+
+- Validates incident title, description and severity.
+- Extracts employee identity from JWT claims.
+- Generates a unique UUID incident reference.
+- Writes incident records to DynamoDB using Boto3.
+- Uses least-privilege IAM permissions.
+- Returns HTTP 201 following a successful write.
+
+### Testing
+
+| Test | Result |
+|---|---|
+| Valid incident submission | PASS — HTTP 201 |
+| DynamoDB record persistence | PASS |
+| Invalid severity (CRITICAL) | PASS — HTTP 400 |
+| Verify Authentication and group | PASS  - HTTP 401, HTTP 403 |
+
+
+### Outstanding Work
+
+- Verify authentication and group rejection tests.
+- Integrate API Gateway and Cognito.
+- Implement robust retry and idempotency handling.
+- Add CloudWatch monitoring.
+
