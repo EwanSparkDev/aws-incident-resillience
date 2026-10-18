@@ -194,6 +194,21 @@ All tests below were run with simulated request events in the Lambda Console.
 | Unauthorised group | HTTP `403` | PASS |
 | Nonexistent incident ID | HTTP `404` | PASS |
 
+**Employee Read Test**
+![Employee read test](../screenshots/lambda-read-employee-get-tickets.png)
+
+**Admin Read Test**
+![Admin read test](../screenshots/lambda-read-admin-get-all-tickets.png)
+
+**Query Ticket ID Test**
+![Query ticket id](../screenshots/lambda-read-query-ticket-id.png)
+
+**Query Other User's Tickets Test**
+![Query Other tickets test](../screenshots/lambda-read-viewing-other-users-ticket.png)
+
+**Wrong Group Permissions Test**
+![Wrong group permissions test](../screenshots/lambda-read-wrong-group.png)
+
 
 
 ### 3.7 Architectural Considerations
