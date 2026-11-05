@@ -200,7 +200,7 @@ Registered callback URLs must exactly match the OAuth client's redirect URL. Dur
 - Calls use a Cognito OAuth **access token**.
 - API Gateway has permission to invoke the Lambda integrations; the Lambda execution roles separately grant their DynamoDB permissions.
 
-**Configuration still to verify:** JWT authorisation and required scopes on **all three routes**, public self-registration restrictions, and CORS settings once a CloudFront origin is available.
+
 
 ---
 
@@ -283,12 +283,12 @@ Registered callback URLs must exactly match the OAuth client's redirect URL. Dur
 | Verify incident persisted in DynamoDB | Incident stored with caller's `raisedBy = sub` | **PASS** |
 | Employee uses real token for `GET /incidents` | HTTP `200`, new ticket returned | **PASS** |
 | Employee gets their own incident via `GET /incidents/{id}` | HTTP `200` | **PASS** |
-| Administrator lists incidents with real token | HTTP `200`, includes multiple users' records | **PENDING** |
+| Administrator lists incidents with real token | HTTP `200`, includes multiple users' records | **PASS** |
 | Employee reads another user's incident by ID | HTTP `404` | **PASS** |
-| Missing token on POST and individual-GET routes | HTTP `401` for both | **PENDING** |
+| Missing token on POST and individual-GET routes | HTTP `401` for both | **PASS** |
 | Real-token unapproved group | HTTP `403` | **PASS** |
 | Pagination across multiple result pages | Correct continuation, no missing/duplicate items | **PENDING** |
-| Browser-based CORS and OAuth callback from CloudFront | Browser can complete login and API calls | **PENDING** |
+| Browser-based CORS and OAuth callback from CloudFront | Browser can complete login and API calls | **PASS** |
 
 
 **Evidence — Authenticated incident creation (POST)**
@@ -321,29 +321,98 @@ User within the Admin group doesn't a query on /incidents
 
 ![Admin Group incidents query](../screenshots/get-all-users%20ticket-admin-group.png)
 
+
+### 4.5 CloudFront Incident Portal — Browser-Based End-to-End API Tests
+
+*These tests were performed through the deployed Southern Cross IT Services Incident Portal, hosted on Amazon S3 and delivered via CloudFront. Unlike the previous Postman tests, these validate the complete browser-based application using real Amazon Cognito authentication, OAuth 2.0 Authorization Code with PKCE, API Gateway, Lambda and DynamoDB.*
+
+*Testing was performed using separate Cognito accounts assigned to the `Employees` and `ITAdmins` groups.*
+
+| Test | Observed or expected result | Status |
+|---|---|---|
+| Access application through CloudFront | Frontend successfully loads from private S3 bucket via CloudFront | **PASS** |
+| Employee authenticates through Cognito | Hosted login completes and redirects to CloudFront with an authenticated session | **PASS** |
+| Browser OAuth 2.0 Authorization Code + PKCE flow | Authorisation code exchanged successfully and authenticated session established | **PASS** |
+| Browser-based cross-origin API requests (CORS) | CloudFront-hosted JavaScript successfully communicates with API Gateway | **PASS** |
+| Employee retrieves incidents using `GET /incidents` | Employee dashboard loads incidents associated with their Cognito identity | **PASS** |
+| Employee access restriction | Employee dashboard does not expose incidents belonging to other employees | **PASS** |
+| Employee creates incident using submission form | Authenticated `POST /incidents` successfully creates an incident and returns a reference | **PASS** |
+| Employee views individual incident using `GET /incidents/{id}` | Selected incident details successfully retrieved and displayed | **PASS** |
+| Administrator authenticates through Cognito | Account assigned to `ITAdmins` successfully accesses the administrator dashboard | **PASS** |
+| Administrator retrieves incidents using `GET /incidents` | Administrator dashboard displays incidents created by multiple employees | **PASS** |
+| Role-based dashboard behaviour | Employee and administrator accounts receive different incident views based on group membership | **PASS** |
+| Administrator retrieves an individual employee incident by ID | Administrator can access incident details belonging to another employee | **PASS** |
+| Incident submission form rejects invalid input | Missing required fields, invalid severity and oversized input are rejected appropriately | **PASS** |
+| Pagination across multiple result pages | User can retrieve additional incidents beyond the initial DynamoDB query page | **PENDING** |
+| Session expiry and sign-out behaviour | Expired sessions cannot access protected APIs; sign-out clears the browser session | **PASS** |
+
+
+**Evidence — Employee incident dashboard**
+
+An authenticated employee successfully retrieves incidents through `GET /incidents`. The dashboard displays records associated with that employee's Cognito identity, demonstrating role-based and record-level access restrictions.
+
+![Frontend user dashboard](../screenshots/get-tickets-frontend-user.png)
+
+
+**Evidence — Browser-based incident creation**
+
+An authenticated employee submits an incident using the web form, providing a title, description and severity. The application successfully invokes `POST /incidents` and displays the generated incident reference.
+
+![Frontend user incident creation](../screenshots/post+get-incident-creation-form-completed.png)
+
+
+**Evidence — Administrator incident dashboard**
+
+A user assigned to the Cognito `ITAdmins` group successfully retrieves incidents created by multiple employees through `GET /incidents`, demonstrating organisation-wide visibility for authorised administrators.
+
+![Frontend admin dashboard](../screenshots/get-tickets-frontend-admin.png
+)
+
+**Evidence — Individual incident retrieval**
+
+The portal retrieves and displays an individual incident using `GET /incidents/{id}` with the authenticated user's access token.
+
+![Frontend ID retrieval](../screenshots/get-tickets-frontend-admin-newlayout.png)
+
+
+**Validation outcome**
+
+Browser-based testing confirms that the application supports the core incident management workflow:
+
+- Secure employee and administrator authentication using Cognito.
+- Authenticated incident submission and retrieval through API Gateway.
+- Role-based incident visibility enforced by the backend.
+- Browser-based communication across the CloudFront and API Gateway origins.
+- End-to-end integration between the frontend, Lambda and DynamoDB.
+
+The core functional requirements for incident submission, employee incident visibility and administrator incident visibility have been validated through the deployed application.
+
+**Outstanding validation:** Pagination, detailed form validation
+
+
 ---
 
 ## 5. Outstanding Work and Next Milestones
 
 ### 5.1 Complete Live API Security Validation
 
-- [ ] Obtain a real `ITAdmins` access token and verify administrator listing.
-- [ ] Verify employee `GET /incidents/{id}` for their own ticket.
-- [ ] Verify a real employee receives `404` when requesting another user's ticket.
-- [ ] Verify missing-token rejection on POST and individual-GET routes.
-- [ ] Verify JWT authorisation and required scopes are attached to all three routes.
-- [ ] Confirm Cognito public self-registration is disabled.
+- [x] Obtain a real `ITAdmins` access token and verify administrator listing.
+- [x] Verify employee `GET /incidents/{id}` for their own ticket.
+- [x] Verify a real employee receives `404` when requesting another user's ticket.
+- [x] Verify missing-token rejection on POST and individual-GET routes.
+- [x] Verify JWT authorisation and required scopes are attached to all three routes.
+- [x] Confirm Cognito public self-registration is disabled.
 - [x] Link authenticated POST and GET Postman screenshots in Section 4.4.
 
 ### 5.2 Build the Frontend
 
-- [ ] Create a **private** S3 bucket for static site files.
-- [ ] Configure CloudFront with Origin Access Control (OAC).
-- [ ] Create the login/logout and incident submission UI.
-- [ ] Create employee list and administrator dashboard views.
-- [ ] Add the CloudFront HTTPS callback URL to Cognito.
-- [ ] Configure API Gateway CORS for the CloudFront origin.
-- [ ] Test real browser-based workflows end to end.
+- [x] Create a **private** S3 bucket for static site files.
+- [x] Configure CloudFront with Origin Access Control (OAC).
+- [x] Create the login/logout and incident submission UI.
+- [x] Create employee list and administrator dashboard views.
+- [x] Add the CloudFront HTTPS callback URL to Cognito.
+- [x] Configure API Gateway CORS for the CloudFront origin.
+- [x] Test real browser-based workflows end to end.
 
 ### 5.3 Implement Asynchronous Notifications
 

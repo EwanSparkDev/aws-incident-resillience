@@ -3,61 +3,615 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Southern Cross IT Services incident management proof of concept.">
+  <meta name="referrer" content="no-referrer">
+  <!-- PoC CSP permits inline script/style; use nonces or external assets for production. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https:; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'">
+  <meta name="description" content="Southern Cross IT Services incident portal proof of concept.">
   <title>Incident Portal | Southern Cross IT Services</title>
   <style>
-    :root { color-scheme: dark; --bg:#0b1220; --panel:#121e31; --panel2:#18273d; --line:#2a3b50; --text:#f5f7fc; --muted:#aebdd2; --accent:#72ddcd; }
+    :root { color-scheme:dark; --bg:#0b1220; --panel:#121e31; --panel2:#18273d; --line:#2a3b50; --text:#f5f7fc; --muted:#adbed1; --accent:#72ddcd; --error:#ffaaa4; --warning:#ffd38b; --blue:#a4c4ff; }
     * { box-sizing:border-box; }
-    html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    body { margin:0; min-height:100vh; background:radial-gradient(circle at 80% 10%, #1b344c 0%, transparent 40%),var(--bg); color:var(--text); }
-    .wrap { width:min(1100px, calc(100% - 40px)); margin:0 auto; }
+    html { font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at 82% 5%,#1b344c 0%,transparent 38%),var(--bg); color:var(--text); }
+    .wrap { width:min(1180px,calc(100% - 40px)); margin:auto; }
     header { border-bottom:1px solid var(--line); }
-    .header-inner { display:flex; justify-content:space-between; align-items:center; min-height:88px; gap:20px; }
-    .brand { display:flex; gap:14px; align-items:center; font-weight:700; letter-spacing:.01em; }
-    .mark { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#09242a; font-weight:900; letter-spacing:-.06em; }
-    .brand small { display:block; font-size:.79rem; font-weight:500; color:var(--muted); margin-top:3px; }
-    .pill { color:var(--accent); border:1px solid #38776f; border-radius:999px; padding:8px 13px; font-size:.78rem; font-weight:650; white-space:nowrap; }
-    main { padding:76px 0 65px; }
-    .eyebrow { color:var(--accent); letter-spacing:.18em; font-size:.75rem; text-transform:uppercase; font-weight:750; }
-    h1 { font-size:clamp(2.45rem, 5.5vw, 4.8rem); letter-spacing:-.055em; line-height:1.08; margin:16px 0 20px; max-width:820px; }
-    .intro { font-size:clamp(1rem,2vw,1.18rem); line-height:1.75; color:var(--muted); max-width:680px; margin-bottom:34px; }
-    .notice { background:#173d3d; border:1px solid #36766c; padding:15px 20px; border-radius:12px; display:inline-flex; gap:12px; align-items:flex-start; max-width:720px; }
-    .notice strong { display:block; margin-bottom:4px; }
-    .notice p { color:#d4e8e3; margin:0; font-size:.91rem; line-height:1.55; }
-    .dot { width:10px; height:10px; background:var(--accent); flex:none; border-radius:50%; margin-top:6px; }
-    h2 { font-size:1.25rem; margin:65px 0 22px; letter-spacing:-.02em; }
-    .features { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:18px; }
-    .feature { background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:16px; padding:25px; min-height:192px; }
-    .feature .num { color:var(--accent); font-size:.78rem; font-weight:750; letter-spacing:.1em; }
-    .feature h3 { font-size:1.12rem; margin:22px 0 9px; }
-    .feature p { font-size:.93rem; color:var(--muted); line-height:1.65; margin:0; }
+    .header-inner { display:flex; align-items:center; justify-content:space-between; min-height:84px; gap:16px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:14px; font-weight:780; }
+    .mark { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; color:#09242a; background:var(--accent); font-weight:900; }
+    .brand small { display:block; font-size:.78rem; font-weight:500; color:var(--muted); margin-top:3px; }
+    .pill { color:var(--accent); border:1px solid #38776f; border-radius:999px; padding:8px 13px; font-size:.78rem; white-space:nowrap; }
+    main { padding:50px 0 86px; }
+    .eyebrow { color:var(--accent); letter-spacing:.16em; font-size:.74rem; text-transform:uppercase; font-weight:750; }
+    h1 { font-size:clamp(2.2rem,4.8vw,3.75rem); line-height:1.08; letter-spacing:-.05em; margin:14px 0 12px; }
+    .intro { color:var(--muted); font-size:1.02rem; line-height:1.7; margin:0 0 30px; max-width:740px; }
+    .panel { background:linear-gradient(155deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:17px; padding:24px; min-width:0; }
+    .panel h2 { font-size:1.3rem; margin:0 0 7px; letter-spacing:-.025em; }
+    .panel h3 { font-size:1.06rem; margin:0; }
+    .muted { color:var(--muted); line-height:1.65; }
+    .caption { color:var(--muted); font-size:.82rem; line-height:1.5; }
+    button { font:inherit; cursor:pointer; border-radius:10px; padding:11px 15px; font-weight:720; border:1px solid var(--accent); background:var(--accent); color:#08292a; }
+    button:hover { filter:brightness(1.06); }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+    button.secondary { color:var(--text); border-color:#577087; background:transparent; }
+    button.compact { padding:8px 11px; font-size:.88rem; }
+    button:disabled { opacity:.55; cursor:default; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .signout-card { max-width:780px; }
+    .account-bar { display:flex; justify-content:space-between; gap:18px; align-items:center; flex-wrap:wrap; padding:19px 22px; margin-bottom:20px; }
+    .account-bar strong { display:block; overflow-wrap:anywhere; }
+    .account-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:7px; }
+    .role-badge { display:inline-block; font-size:.74rem; letter-spacing:.045em; text-transform:uppercase; font-weight:750; padding:5px 9px; border-radius:999px; border:1px solid #42615b; color:var(--accent); }
+    .two-column { display:grid; grid-template-columns:minmax(300px, .8fr) minmax(0,1.2fr); gap:20px; align-items:start; }
+    .panel-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:19px; }
+    .panel-heading p { margin:5px 0 0; color:var(--muted); font-size:.92rem; }
+    label { display:block; font-size:.91rem; font-weight:650; margin-bottom:8px; }
+    .field { margin-bottom:17px; }
+    input, textarea, select { width:100%; border:1px solid #52677f; border-radius:9px; background:#0c192b; color:var(--text); padding:11px 12px; font:inherit; }
+    textarea { min-height:136px; resize:vertical; line-height:1.55; }
+    input::placeholder, textarea::placeholder { color:#899ab1; }
+    .field-help { color:var(--muted); font-size:.76rem; margin:7px 0 0; }
+    .form-status { border-radius:10px; margin:14px 0 0; padding:12px 13px; background:#102b2d; border:1px solid #376f69; font-size:.91rem; line-height:1.55; overflow-wrap:anywhere; }
+    .form-status.error { background:#3a1d25; color:var(--error); border-color:#904855; }
+    .form-status:empty { display:none; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+    .stat { padding:13px 14px; border-radius:11px; border:1px solid var(--line); background:#0e1c2d; }
+    .stat strong { display:block; font-size:1.55rem; letter-spacing:-.035em; }
+    .stat span { color:var(--muted); font-size:.78rem; }
+    .filters { display:grid; grid-template-columns:minmax(130px,1fr) minmax(98px,.65fr) minmax(98px,.65fr) minmax(123px,.75fr); gap:10px; margin:15px 0; }
+    .filters label { font-size:.78rem; margin-bottom:5px; }
+    .filters input, .filters select { padding:9px; font-size:.89rem; }
+    .ticket-list { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+    .ticket { border:1px solid var(--line); background:#0f1b2c; padding:15px; border-radius:12px; }
+    .ticket-head { display:flex; justify-content:space-between; gap:12px; align-items:start; }
+    .ticket-title { font-size:.99rem; font-weight:750; overflow-wrap:anywhere; }
+    .badges { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .tag { color:var(--blue); background:#172c49; border:1px solid #3c587b; border-radius:999px; font-size:.72rem; padding:3px 8px; font-weight:700; }
+    .tag.high { color:#ffd0bc; background:#462723; border-color:#945748; }
+    .tag.medium { color:var(--warning); background:#372b21; border-color:#755a33; }
+    .tag.low { color:#b2e8d0; background:#1a352d; border-color:#42735b; }
+    .ticket small { display:block; color:var(--muted); margin:5px 0; overflow-wrap:anywhere; }
+    .ticket p { color:#d1deec; font-size:.87rem; line-height:1.5; margin:8px 0 11px; overflow-wrap:anywhere; white-space:pre-wrap; }
+    .ticket button { margin-top:2px; }
+    .empty { border:1px dashed #435a73; background:#0e1b2b; border-radius:12px; padding:21px; color:var(--muted); font-size:.9rem; line-height:1.55; }
+    .notice { color:var(--warning); font-size:.83rem; line-height:1.6; margin-top:13px; }
+    .detail-panel { margin-top:20px; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+    .detail-field { border-top:1px solid var(--line); padding-top:11px; min-width:0; }
+    .detail-field small { display:block; color:var(--muted); margin-bottom:5px; }
+    .detail-field span { overflow-wrap:anywhere; white-space:pre-wrap; }
+    .detail-field.wide { grid-column:1/-1; }
+    .status { min-height:24px; margin:18px 0 0; line-height:1.55; color:var(--muted); font-size:.9rem; }
+    .status.error { color:var(--error); }
+    .note { border-left:3px solid var(--accent); padding-left:14px; margin-top:28px; color:var(--muted); font-size:.86rem; line-height:1.65; max-width:990px; }
+    [hidden] { display:none!important; }
     footer { border-top:1px solid var(--line); color:var(--muted); padding:23px 0 33px; font-size:.82rem; }
-    footer .wrap { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
-    @media (max-width:680px) { .features {grid-template-columns:1fr;} main {padding-top:55px;} .header-inner{min-height:78px;} .brand{font-size:.9rem;} .pill{font-size:.7rem;} }
+    .foot { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    @media(max-width:900px) { .two-column { grid-template-columns:1fr; } }
+    @media(max-width:620px) { .filters { grid-template-columns:1fr 1fr; } main { padding:37px 0 60px; } .wrap { width:min(100% - 26px,1180px); } .panel { padding:17px; } .filters { grid-template-columns:1fr 1fr; } .filters .search-filter { grid-column:1/-1; } .account-bar { padding:16px; } .ticket-head { flex-wrap:wrap; } }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap header-inner">
       <div class="brand"><div class="mark" aria-hidden="true">SC</div><div>Southern Cross IT Services<small>Incident Management Portal</small></div></div>
-      <div class="pill">Proof of concept</div>
+      <div class="pill">AWS proof of concept</div>
     </div>
   </header>
   <main class="wrap">
-    <div class="eyebrow">Project Resilience / Frontend</div>
-    <h1>IT support.<br>Clear, simple, reliable.</h1>
-    <p class="intro">A single place for staff to raise support incidents, follow their progress and help IT teams stay informed.</p>
-    <div class="notice" role="status">
-      <div class="dot" aria-hidden="true"></div>
-      <div><strong>Frontend hosting validation</strong><p>This is the initial static page. Cognito sign-in and live incident management will be connected in the next implementation stage.</p></div>
-    </div>
-    <h2>What the portal will support</h2>
-    <div class="features">
-      <section class="feature"><div class="num">01 / CREATE</div><h3>Raise an incident</h3><p>Submit a support request with a title, description and severity, then receive a unique reference.</p></section>
-      <section class="feature"><div class="num">02 / TRACK</div><h3>View your requests</h3><p>Employees will securely retrieve their own tickets using Cognito identity and our existing API.</p></section>
-      <section class="feature"><div class="num">03 / ADMIN</div><h3>IT team visibility</h3><p>Authorised administrators will be able to review incidents submitted across the organisation.</p></section>
-    </div>
+    <div class="eyebrow">Project Resilience / Incident management</div>
+    <h1>IT support, without the friction.</h1>
+    <p class="intro">A secure incident portal for Southern Cross IT Services. Raise support requests, track their progress and access the records permitted by your account.</p>
+
+    <section class="panel signout-card" id="signed-out-panel">
+      <h2>Sign in to your account</h2>
+      <p class="muted">You'll be redirected to Amazon Cognito and brought back here after authenticating.</p>
+      <div class="actions"><button id="login-button" type="button">Sign in with Cognito</button></div>
+    </section>
+
+    <section id="signed-in-panel" hidden>
+      <div class="panel account-bar">
+        <div>
+          <span class="caption">SIGNED IN AS</span>
+          <strong id="account-name">Authenticated session</strong>
+          <div class="account-meta"><span class="role-badge" id="role-badge">Employee</span><span class="caption" id="session-details"></span></div>
+        </div>
+        <div class="actions"><button class="secondary compact" id="logout-button" type="button">Sign out</button></div>
+      </div>
+
+      <div class="two-column">
+        <section class="panel" aria-labelledby="create-heading">
+          <div class="panel-heading">
+            <div><h2 id="create-heading">Raise an incident</h2><p>Tell the IT team what you need help with.</p></div>
+          </div>
+          <form id="incident-form">
+            <div class="field">
+              <label for="incident-title">Title</label>
+              <input id="incident-title" name="title" type="text" maxlength="150" required placeholder="e.g. Cannot connect to the VPN" autocomplete="off">
+              <div class="field-help">Maximum 150 characters</div>
+            </div>
+            <div class="field">
+              <label for="incident-description">Description</label>
+              <textarea id="incident-description" name="description" maxlength="2000" required placeholder="What happened? Include any useful details."></textarea>
+              <div class="field-help">Maximum 2,000 characters</div>
+            </div>
+            <div class="field">
+              <label for="incident-severity">Severity</label>
+              <select id="incident-severity" name="severity" required>
+                <option value="LOW">Low — can continue working</option>
+                <option value="MEDIUM" selected>Medium — service is disrupted</option>
+                <option value="HIGH">High — significant impact</option>
+              </select>
+            </div>
+            <button id="submit-incident-button" type="submit">Submit incident</button>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="inbox-heading">
+          <div class="panel-heading">
+            <div>
+              <h2 id="inbox-heading">My incidents</h2>
+              <p id="inbox-description">Incidents associated with your Cognito account.</p>
+            </div>
+            <button class="secondary compact" id="load-tickets-button" type="button">Refresh tickets</button>
+          </div>
+          <div class="stats" aria-label="Loaded incident summary">
+            <div class="stat"><strong id="loaded-count">—</strong><span>Incidents loaded</span></div>
+            <div class="stat"><strong id="high-count">—</strong><span>High severity in this page</span></div>
+          </div>
+          <div class="filters">
+            <div class="search-filter"><label for="filter-search">Search loaded tickets</label><input id="filter-search" type="search" placeholder="Title, ID, description"></div>
+            <div><label for="filter-severity">Severity</label><select id="filter-severity"><option value="ALL">All</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option></select></div>
+            <div><label for="filter-status">Status</label><select id="filter-status"><option value="ALL">All</option><option value="SUBMITTED">Submitted</option><option value="IN_PROGRESS">In progress</option><option value="RESOLVED">Resolved</option></select></div>
+            <div><label for="sort-order">Sort</label><select id="sort-order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="severity">Highest severity</option></select></div>
+          </div>
+          <div class="empty" id="tickets-empty">Click “Refresh tickets” to load your incidents.</div>
+          <ul class="ticket-list" id="ticket-list" aria-label="Incidents"></ul>
+          <p class="notice" id="pagination-notice" hidden>Only the first query page is displayed. The ReadIncident Lambda currently returns up to 25 items; requesting subsequent pages is a future enhancement.</p>
+        </section>
+      </div>
+
+      <section class="panel detail-panel" id="incident-detail" aria-labelledby="detail-heading" hidden>
+        <div class="panel-heading">
+          <div><h2 id="detail-heading">Incident details</h2><p>Retrieved from the protected GET /incidents/{id} route.</p></div>
+          <button type="button" class="secondary compact" id="close-detail-button">Close details</button>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-field"><small>Incident reference</small><span id="detail-id"></span></div>
+          <div class="detail-field"><small>Created</small><span id="detail-created"></span></div>
+          <div class="detail-field"><small>Severity</small><span id="detail-severity"></span></div>
+          <div class="detail-field"><small>Status</small><span id="detail-status"></span></div>
+          <div class="detail-field wide"><small>Title</small><span id="detail-title"></span></div>
+          <div class="detail-field wide"><small>Description</small><span id="detail-description"></span></div>
+          <div class="detail-field wide" id="detail-owner-row" hidden><small>Raised by (Cognito sub)</small><span id="detail-owner"></span></div>
+        </div>
+      </section>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p class="note"><strong>Portfolio PoC:</strong> This page calls protected AWS HTTP API routes directly from the browser. The administrator view displays all incidents returned by the backend's AdminIndex query, while employee access is enforced by Lambda. Filtering and sorting apply only to loaded results. Notifications and multi-page pagination are not yet implemented.</p>
   </main>
-  <footer><div class="wrap"><span>Southern Cross IT Services — fictional portfolio organisation</span><span>AWS PoC · ap-southeast-2</span></div></footer>
+  <footer><div class="wrap foot"><span>Southern Cross IT Services — fictional portfolio organisation</span><span>AWS PoC · ap-southeast-2</span></div></footer>
+
+  <script>
+    "use strict";
+
+    // ================================================================
+    // REPLACE THESE THREE VALUES WITH YOUR OWN AWS CONFIGURATION.
+    // The Cognito app client must be a PUBLIC SPA client (no secret).
+    // ================================================================
+    const CONFIG = {
+      cognitoDomain: "https://project-resilience-demo.auth.ap-southeast-2.amazoncognito.com",
+      clientId: "2bqroutq5bd9nfc35rfdq4ro1b",
+      apiBaseUrl: "https://ns8te0ymbb.execute-api.ap-southeast-2.amazonaws.com"
+    };
+
+    // Must EXACTLY match an allowed callback and sign-out URL in Cognito.
+    // Use CloudFront's root URL with a trailing slash.
+    const redirectUri = window.location.origin + "/";
+    const FLOW_KEY = "resilience_login_flow";
+    const SESSION_KEY = "resilience_demo_session";
+    const $ = (id) => document.getElementById(id);
+    let session = null;
+    let incidents = [];
+    let lastQueryKey = null;
+    let hasLoadedTickets = false;
+    let isAdmin = false;
+
+    function setStatus(message, error = false) {
+      $("status").textContent = message;
+      $("status").classList.toggle("error", error);
+    }
+
+    function validateConfig() {
+      try {
+        const domain = new URL(CONFIG.cognitoDomain);
+        const api = new URL(CONFIG.apiBaseUrl);
+        return domain.protocol === "https:" && api.protocol === "https:"
+          && !domain.hostname.includes("REPLACE")
+          && !api.hostname.includes("REPLACE")
+          && !CONFIG.clientId.includes("REPLACE")
+          && /^[A-Za-z0-9]+$/.test(CONFIG.clientId)
+          && domain.pathname === "/";
+      } catch { return false; }
+    }
+
+    function base64Url(bytes) {
+      let text = "";
+      for (const byte of bytes) text += String.fromCharCode(byte);
+      return btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    }
+
+    function randomString() { return base64Url(crypto.getRandomValues(new Uint8Array(32))); }
+
+    async function pkceChallenge(verifier) {
+      const bytes = new TextEncoder().encode(verifier);
+      return base64Url(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+    }
+
+    function jwtClaims(jwt) {
+      // Display only. JWT is validated for access by API Gateway, NOT here.
+      try {
+        const part = jwt.split(".")[1];
+        const padded = part.replace(/-/g, "+").replace(/_/g, "/")
+          + "=".repeat((4 - part.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      } catch { return {}; }
+    }
+
+    function getGroupNames(accessToken) {
+      const raw = jwtClaims(accessToken)["cognito:groups"] || [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === "string") return raw.replace(/^\[|\]$/g, "").split(",").map(s => s.trim().replace(/^['"]|['"]$/g, ""));
+      return [];
+    }
+
+    function showSignedOut() {
+      session = null;
+      incidents = [];
+      lastQueryKey = null;
+      hasLoadedTickets = false;
+      isAdmin = false;
+      $("signed-out-panel").hidden = false;
+      $("signed-in-panel").hidden = true;
+      $("ticket-list").replaceChildren();
+      $("incident-detail").hidden = true;
+      $("form-status").textContent = "";
+      $("login-button").disabled = false;
+    }
+
+    function showSignedIn(tokens) {
+      session = tokens;
+      incidents = [];
+      lastQueryKey = null;
+      hasLoadedTickets = false;
+      $("signed-out-panel").hidden = true;
+      $("signed-in-panel").hidden = false;
+      $("incident-detail").hidden = true;
+      const identity = jwtClaims(tokens.idToken || "");
+      const groups = getGroupNames(tokens.accessToken);
+      isAdmin = groups.includes("ITAdmins");
+      $("account-name").textContent = identity.email || "Authenticated Cognito user";
+      $("role-badge").textContent = isAdmin ? "IT Administrator" : "Employee";
+      $("session-details").textContent = "Groups: " + (groups.length ? groups.join(", ") : "None");
+      $("inbox-heading").textContent = isAdmin ? "Administrator incident dashboard" : "My incidents";
+      $("inbox-description").textContent = isAdmin
+        ? "Incidents raised across the organisation (current query page)."
+        : "Incidents associated with your Cognito user ID.";
+      $("tickets-empty").hidden = false;
+      $("tickets-empty").textContent = "Click “Refresh tickets” to load your incidents.";
+      $("ticket-list").replaceChildren();
+      $("loaded-count").textContent = "—";
+      $("high-count").textContent = "—";
+      $("pagination-notice").hidden = true;
+    }
+
+    async function beginLogin() {
+      if (!validateConfig()) {
+        setStatus("Please set the Cognito domain, app client ID and API URL in index.html first.", true);
+        return;
+      }
+      $("login-button").disabled = true;
+      try {
+        const verifier = randomString();
+        const state = randomString();
+        sessionStorage.setItem(FLOW_KEY, JSON.stringify({ verifier, state, at: Date.now() }));
+        const params = new URLSearchParams({
+          response_type: "code",
+          client_id: CONFIG.clientId,
+          redirect_uri: redirectUri,
+          scope: "openid email",
+          state,
+          code_challenge_method: "S256",
+          code_challenge: await pkceChallenge(verifier)
+        });
+        window.location.assign(CONFIG.cognitoDomain.replace(/\/$/, "") + "/oauth2/authorize?" + params);
+      } catch (err) {
+        setStatus("Could not start login: " + err.message, true);
+        $("login-button").disabled = false;
+      }
+    }
+
+    async function handleCallback(code, returnedState) {
+      const flowText = sessionStorage.getItem(FLOW_KEY);
+      sessionStorage.removeItem(FLOW_KEY);
+      // Remove the single-use authorization code from browser history promptly.
+      history.replaceState(null, "", redirectUri);
+      let flow;
+      try { flow = JSON.parse(flowText || "null"); } catch { flow = null; }
+      if (!flow || returnedState !== flow.state || Date.now() - flow.at > 5 * 60 * 1000) {
+        setStatus("Login state mismatch or expired. Please click Sign in again.", true);
+        return;
+      }
+      setStatus("Signing in… exchanging the authorization code securely.");
+      const body = new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: CONFIG.clientId,
+        code,
+        redirect_uri: redirectUri,
+        code_verifier: flow.verifier
+      });
+      try {
+        const response = await fetch(CONFIG.cognitoDomain.replace(/\/$/, "") + "/oauth2/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        });
+        if (!response.ok) throw new Error("Token exchange failed (HTTP " + response.status + "). Check the callback URL and app client configuration.");
+        const tokens = await response.json();
+        if (!tokens.access_token || !tokens.id_token) throw new Error("Cognito did not return the expected tokens.");
+        const accessClaims = jwtClaims(tokens.access_token);
+        const expiresAt = Math.min(Date.now() + (tokens.expires_in || 3600) * 1000, (accessClaims.exp || Infinity) * 1000);
+        const stored = {accessToken: tokens.access_token, idToken: tokens.id_token, expiresAt};
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(stored));
+        showSignedIn(stored);
+        setStatus("Signed in successfully. You can now raise or retrieve incidents.");
+        await loadTickets();
+      } catch (err) {
+        showSignedOut();
+        setStatus(err.message, true);
+      }
+    }
+
+    function ensureSession() {
+      if (!session || Date.now() >= session.expiresAt - 15000) {
+        sessionStorage.removeItem(SESSION_KEY);
+        showSignedOut();
+        setStatus("Your access token has expired. Sign in again.", true);
+        throw new Error("Session expired; please sign in again.");
+      }
+    }
+
+    async function apiRequest(path, {method = "GET", body} = {}) {
+      ensureSession();
+      const headers = {Authorization: "Bearer " + session.accessToken};
+      if (body !== undefined) headers["Content-Type"] = "application/json";
+      const response = await fetch(CONFIG.apiBaseUrl.replace(/\/$/, "") + path, {
+        method,
+        headers,
+        cache: "no-store",
+        ...(body !== undefined ? {body: JSON.stringify(body)} : {})
+      });
+      let data;
+      try { data = await response.json(); } catch { data = {}; }
+      if (!response.ok) {
+        if (response.status === 401) {
+          sessionStorage.removeItem(SESSION_KEY);
+          showSignedOut();
+        }
+        const reason = (data && typeof data.message === "string") ? data.message : "Request failed";
+        throw new Error("HTTP " + response.status + " — " + reason);
+      }
+      return {statusCode: response.status, data};
+    }
+
+    function formatDate(raw) {
+      if (!raw) return "Not recorded";
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? String(raw) : parsed.toLocaleString("en-AU", {dateStyle:"medium",timeStyle:"short"});
+    }
+
+    function severityRank(value) { return ({HIGH:3,MEDIUM:2,LOW:1})[value] || 0; }
+
+    function renderTickets() {
+      const container = $("ticket-list");
+      container.replaceChildren();
+      const search = $("filter-search").value.trim().toLowerCase();
+      const severity = $("filter-severity").value;
+      const order = $("sort-order").value;
+      const status = $("filter-status").value;
+      const filtered = incidents.filter(item => {
+        if (severity !== "ALL" && item.severity !== severity) return false;
+        if (status !== "ALL" && item.status !== status) return false;
+        const fields = [item.title, item.incidentId, item.description, isAdmin ? item.raisedBy : ""];
+        return fields.some(value => String(value || "").toLowerCase().includes(search));
+      }).sort((a,b) => {
+        if (order === "severity") return severityRank(b.severity) - severityRank(a.severity)
+          || String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+        const difference = String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+        return order === "oldest" ? difference : -difference;
+      });
+      $("loaded-count").textContent = hasLoadedTickets ? String(incidents.length) : "—";
+      $("high-count").textContent = hasLoadedTickets ? String(incidents.filter(i => i.severity === "HIGH").length) : "—";
+      $("tickets-empty").hidden = filtered.length > 0;
+      if (!hasLoadedTickets) {
+        $("tickets-empty").textContent = "Click “Refresh tickets” to load your incidents.";
+      } else if (!incidents.length) {
+        $("tickets-empty").textContent = "No incidents found for this account. Raise a ticket to get started.";
+      } else {
+        $("tickets-empty").textContent = "No tickets match these filters within the loaded page.";
+      }
+      for (const item of filtered) {
+        const li = document.createElement("li");
+        li.className = "ticket";
+        const header = document.createElement("div");
+        header.className = "ticket-head";
+        const title = document.createElement("span");
+        title.className = "ticket-title";
+        title.textContent = String(item.title || "Untitled incident");
+        const date = document.createElement("small");
+        date.textContent = formatDate(item.createdAt);
+        header.append(title, date);
+        const badges = document.createElement("div");
+        badges.className = "badges";
+        const severityBadge = document.createElement("span");
+        severityBadge.className = "tag " + String(item.severity || "").toLowerCase();
+        severityBadge.textContent = String(item.severity || "UNKNOWN");
+        const statusBadge = document.createElement("span");
+        statusBadge.className = "tag";
+        statusBadge.textContent = String(item.status || "UNKNOWN");
+        badges.append(severityBadge, statusBadge);
+        const reference = document.createElement("small");
+        reference.textContent = "Reference: " + String(item.incidentId || "Unknown");
+        const preview = document.createElement("p");
+        const rawDescription = String(item.description || "");
+        preview.textContent = rawDescription.length > 180 ? rawDescription.slice(0,180) + "…" : rawDescription;
+        li.append(header, badges, reference);
+        if (isAdmin) {
+          const owner = document.createElement("small");
+          owner.textContent = "Raised by: " + String(item.raisedBy || "Not recorded");
+          li.append(owner);
+        }
+        if (rawDescription) li.append(preview);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary compact";
+        button.textContent = "View details";
+        button.addEventListener("click", () => viewIncident(String(item.incidentId || ""), button));
+        li.append(button);
+        container.append(li);
+      }
+    }
+
+    async function loadTickets() {
+      $("load-tickets-button").disabled = true;
+      setStatus("Loading incidents from API Gateway…");
+      try {
+        const {data} = await apiRequest("/incidents");
+        incidents = Array.isArray(data.incidents) ? data.incidents : [];
+        lastQueryKey = data.nextKey || null;
+        hasLoadedTickets = true;
+        renderTickets();
+        $("pagination-notice").hidden = !lastQueryKey;
+        setStatus("HTTP 200 — retrieved " + incidents.length + " incident(s) from the protected API." + (lastQueryKey ? " More records may be available." : ""));
+      } catch (err) {
+        setStatus("Couldn't load incidents: " + err.message, true);
+      } finally {
+        $("load-tickets-button").disabled = false;
+      }
+    }
+
+    function setFormStatus(message, error = false) {
+      $("form-status").textContent = message;
+      $("form-status").classList.toggle("error", error);
+    }
+
+    async function submitIncident(event) {
+      event.preventDefault();
+      const title = $("incident-title").value.trim();
+      const description = $("incident-description").value.trim();
+      const severity = $("incident-severity").value;
+      if (!title || !description || !["LOW","MEDIUM","HIGH"].includes(severity)
+          || title.length > 150 || description.length > 2000) {
+        setFormStatus("Please enter a title, description and valid severity within the length limits.", true);
+        return;
+      }
+      $("submit-incident-button").disabled = true;
+      setFormStatus("Submitting incident…");
+      try {
+        const {statusCode, data} = await apiRequest("/incidents", {
+          method:"POST", body:{title, description, severity}
+        });
+        if (statusCode !== 201 || !data.incidentId) throw new Error("Unexpected create response; verify the incident in DynamoDB before retrying.");
+        $("incident-form").reset();
+        setFormStatus("Incident created successfully — " + data.incidentId + ". Your reference is ready. If it isn't in the list immediately, refresh again (DynamoDB indexes are eventually consistent).");
+        await loadTickets();
+      } catch (err) {
+        setFormStatus("Couldn't confirm incident creation: " + err.message + ". If a request timed out, check your ticket list before submitting again.", true);
+      } finally {
+        $("submit-incident-button").disabled = false;
+      }
+    }
+
+    async function viewIncident(incidentId, button) {
+      if (!incidentId) return;
+      button.disabled = true;
+      setStatus("Loading incident " + incidentId + "…");
+      try {
+        const {data} = await apiRequest("/incidents/" + encodeURIComponent(incidentId));
+        if (!data.incident) throw new Error("The API did not return an incident object.");
+        const item = data.incident;
+        const values = {
+          "detail-id":item.incidentId,
+          "detail-created":formatDate(item.createdAt),
+          "detail-severity":item.severity,
+          "detail-status":item.status,
+          "detail-title":item.title,
+          "detail-description":item.description,
+          "detail-owner":item.raisedBy
+        };
+        for (const [id, value] of Object.entries(values)) $(id).textContent = String(value || "Not recorded");
+        $("detail-owner-row").hidden = !isAdmin;
+        $("incident-detail").hidden = false;
+        setStatus("HTTP 200 — individual incident retrieved successfully.");
+        $("incident-detail").scrollIntoView({behavior:"smooth",block:"start"});
+      } catch (err) {
+        setStatus("Couldn't open incident: " + err.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(FLOW_KEY);
+      showSignedOut();
+      if (!validateConfig()) return;
+      const params = new URLSearchParams({client_id: CONFIG.clientId, logout_uri: redirectUri});
+      window.location.assign(CONFIG.cognitoDomain.replace(/\/$/, "") + "/logout?" + params);
+    }
+
+    async function init() {
+      $("login-button").addEventListener("click", beginLogin);
+      $("logout-button").addEventListener("click", logout);
+      $("load-tickets-button").addEventListener("click", loadTickets);
+      $("incident-form").addEventListener("submit", submitIncident);
+      $("filter-search").addEventListener("input", renderTickets);
+      $("filter-severity").addEventListener("change", renderTickets);
+      $("filter-status").addEventListener("change", renderTickets);
+      $("sort-order").addEventListener("change", renderTickets);
+      $("close-detail-button").addEventListener("click", () => { $("incident-detail").hidden = true; });
+      if (!validateConfig()) {
+        setStatus("Setup needed: replace the three CONFIG placeholders in this file before uploading to S3.", true);
+        return;
+      }
+      const query = new URLSearchParams(window.location.search);
+      if (query.has("error")) {
+        history.replaceState(null, "", redirectUri);
+        setStatus("Cognito login error: " + (query.get("error_description") || query.get("error")), true);
+        return;
+      }
+      if (query.has("code")) {
+        await handleCallback(query.get("code"), query.get("state"));
+        return;
+      }
+      const old = sessionStorage.getItem(SESSION_KEY);
+      if (old) {
+        try {
+          const saved = JSON.parse(old);
+          if (saved.accessToken && saved.expiresAt > Date.now() + 15000) {
+            showSignedIn(saved);
+            setStatus("Session restored for this browser tab.");
+            await loadTickets();
+            return;
+          }
+        } catch { /* Ignore corrupted tab state. */ }
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+      setStatus("Ready. Click Sign in with Cognito to begin.");
+    }
+
+    init();
+  </script>
 </body>
 </html>
