@@ -365,8 +365,7 @@ An authenticated employee submits an incident using the web form, providing a ti
 
 A user assigned to the Cognito `ITAdmins` group successfully retrieves incidents created by multiple employees through `GET /incidents`, demonstrating organisation-wide visibility for authorised administrators.
 
-![Frontend admin dashboard](../screenshots/get-tickets-frontend-admin.png
-)
+![Frontend admin dashboard](../screenshots/get-tickets-frontend-admin.png)
 
 **Evidence — Individual incident retrieval**
 
