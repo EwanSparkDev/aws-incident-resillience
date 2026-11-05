@@ -317,7 +317,7 @@ The same employee tries to retrieve tickets when they are not a member of the re
 
 **Evidence - Autheticated Admin retrieving all tickets (GET)**
 
-User within the Admin group doesnt a query on /incidents
+User within the Admin group doesn't a query on /incidents
 
 ![Admin Group incidents query](../screenshots/get-all-users%20ticket-admin-group.png)
 
