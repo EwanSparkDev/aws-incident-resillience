@@ -282,15 +282,14 @@ Registered callback URLs must exactly match the OAuth client's redirect URL. Dur
 | Employee uses real token for `POST /incidents` | HTTP `201`, incident created | **PASS** |
 | Verify incident persisted in DynamoDB | Incident stored with caller's `raisedBy = sub` | **PASS** |
 | Employee uses real token for `GET /incidents` | HTTP `200`, new ticket returned | **PASS** |
-| Employee gets their own incident via `GET /incidents/{id}` | HTTP `200` | **PENDING** |
+| Employee gets their own incident via `GET /incidents/{id}` | HTTP `200` | **PASS** |
 | Administrator lists incidents with real token | HTTP `200`, includes multiple users' records | **PENDING** |
-| Employee reads another user's incident by ID | HTTP `404` | **PENDING** |
+| Employee reads another user's incident by ID | HTTP `404` | **PASS** |
 | Missing token on POST and individual-GET routes | HTTP `401` for both | **PENDING** |
-| Real-token unapproved group | HTTP `403` | **PENDING** |
+| Real-token unapproved group | HTTP `403` | **PASS** |
 | Pagination across multiple result pages | Correct continuation, no missing/duplicate items | **PENDING** |
 | Browser-based CORS and OAuth callback from CloudFront | Browser can complete login and API calls | **PENDING** |
 
-**Why the employee's first GET was empty:** Earlier records belonged to the synthetic identity `employee-demo-001`. A fresh POST using the actual Cognito account stored its real `sub` in `raisedBy`; the subsequent GET correctly returned that ticket.
 
 **Evidence — Authenticated incident creation (POST)**
 
@@ -304,7 +303,23 @@ The same employee retrieved the new incident through `GET /incidents` (`HTTP 200
 
 ![Authenticated GET test](../screenshots/get-test-create-ticket-using-cognito.png)
 
-**Evidence hygiene:** Keep passwords, access/refresh tokens and sensitive identifiers out of public screenshots.
+**Evidence — Authenticated employee incident retrieval of another users ticket (GET)**
+
+The same employee tries to retrieve another users incidents through querying the ID
+
+![Authenticated GET of another users ticket test](../screenshots/get-other-users-ticket-specific-ID.png)
+
+**Evidence - Authenticated employee tretriving tickets without group membership (GET)**
+
+The same employee tries to retrieve tickets when they are not a member of the required groups
+
+![Authenticated GET from incorrect group](../screenshots/get-users-ticket-specific-ID-incorrect-group.png)
+
+**Evidence - Autheticated Admin retrieving all tickets (GET)**
+
+User within the Admin group doesnt a query on /incidents
+
+![Admin Group incidents query](../screenshots/get-all-users%20ticket-admin-group.png)
 
 ---
 
