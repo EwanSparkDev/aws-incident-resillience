@@ -351,7 +351,7 @@ User within the Admin group doesn't a query on /incidents
 
 An authenticated employee successfully retrieves incidents through `GET /incidents`. The dashboard displays records associated with that employee's Cognito identity, demonstrating role-based and record-level access restrictions.
 
-![Frontend user dashboard](../screenshots/get-tickets-frontend-user.png)
+![Frontend user dashboard](../screenshots/post-incident-creation-form.png)
 
 
 **Evidence — Browser-based incident creation**
@@ -365,7 +365,7 @@ An authenticated employee submits an incident using the web form, providing a ti
 
 A user assigned to the Cognito `ITAdmins` group successfully retrieves incidents created by multiple employees through `GET /incidents`, demonstrating organisation-wide visibility for authorised administrators.
 
-![Frontend admin dashboard](../screenshots/get-tickets-frontend-admin.png)
+![Frontend admin dashboard](../screenshots/get-incident-admin-dashboard.png)
 
 **Evidence — Individual incident retrieval**
 
